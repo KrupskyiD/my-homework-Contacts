@@ -51,6 +51,16 @@ const categoryService = {
       console.error(`Error deleting category with id ${id}:`, error);
       throw error;
     }
+  },
+
+  getContactsByCategory: async (id) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/categories/${id}/contacts`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching contacts for category ${id}:`, error);
+      throw error;
+    }
   }
 };
 

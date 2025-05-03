@@ -78,6 +78,25 @@ const categoryController = {
             }
             res.status(500).json({ error: error.message });
         }
+    },
+
+    // Get contacts by category ID
+    getContactsByCategory: (req, res) => {
+        try {
+            const categoryId = req.params.id;
+            
+            // Check if category exists
+            const category = storage.getCategoryById(categoryId);
+            if (!category) {
+                return res.json([]); // Return empty array if category doesn't exist
+            }
+
+            // Get contacts for the category
+            const contacts = storage.getContactsByCategory(categoryId);
+            res.json(contacts);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
     }
 };
 

@@ -49,14 +49,8 @@ function ContactList({ showFilterModal, setShowFilterModal }) {
   };
 
   const handleDeleteClick = async (contact) => {
-    try {
-      await contactService.deleteContact(contact.id);
-      setContacts(contacts.filter(c => c.id !== contact.id));
-    } catch (error) {
-      console.error('Error deleting contact:', error);
-      setContactToDelete(contact);
-      setShowDeleteModal(true);
-    }
+    setContactToDelete(contact);
+    setShowDeleteModal(true);
   };
 
   const handleDeleteConfirm = async () => {

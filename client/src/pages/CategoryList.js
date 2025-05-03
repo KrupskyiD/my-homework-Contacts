@@ -65,25 +65,48 @@ function CategoryList() {
 
   const handleDeleteClick = async (category) => {
     try {
-      await categoryService.deleteCategory(category.id);
-      setCategories(categories.filter(c => c.id !== category.id));
-    } catch (error) {
-      console.error('Error deleting category:', error);
-      if (error.response?.data?.error === 'Cannot delete category with associated contacts') {
+      // First check if the category has associated contacts
+      const contactsWithCategory = await categoryService.getContactsByCategory(category.id);
+      console.log('Contacts with category:', contactsWithCategory.length);
+      
+      if (contactsWithCategory.length > 0) {
+        // Category has contacts - show warning modal only
         setShowWarningModal(true);
-      } else {
-        setCategoryToDelete(category);
-        setShowDeleteModal(true);
+        return;
       }
+      
+      // Category has no contacts - show confirmation modal
+      setCategoryToDelete(category);
+      setShowDeleteModal(true);
+    } catch (error) {
+      console.error('Error checking category:', error);
+      console.log('Error response data:', error.response?.data);
+      
+      // If the error is about associated contacts, show warning modal
+      if (error.response?.data?.error?.includes('associated contacts')) {
+        setShowWarningModal(true);
+        return;
+      }
+      
+      // For other errors, show confirmation modal
+      setCategoryToDelete(category);
+      setShowDeleteModal(true);
     }
   };
 
   const handleDeleteConfirm = async () => {
+    // Double-check that we have a category to delete and the modal is showing
+    if (!categoryToDelete || !showDeleteModal) return;
+    
     try {
       await categoryService.deleteCategory(categoryToDelete.id);
       setCategories(categories.filter(category => category.id !== categoryToDelete.id));
     } catch (error) {
       console.error('Error deleting category:', error);
+      // If the error is about associated contacts, show warning modal
+      if (error.response?.data?.error?.includes('associated contacts')) {
+        setShowWarningModal(true);
+      }
     } finally {
       setShowDeleteModal(false);
       setCategoryToDelete(null);
