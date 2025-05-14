@@ -48,6 +48,10 @@ function ContactList({ showFilterModal, setShowFilterModal }) {
     }
   };
 
+  const handleCategoryAdded = (newCategory) => {
+    setCategories(prevCategories => [...prevCategories, newCategory]);
+  };
+
   const handleDeleteClick = async (contact) => {
     setContactToDelete(contact);
     setShowDeleteModal(true);
@@ -188,6 +192,7 @@ function ContactList({ showFilterModal, setShowFilterModal }) {
           onSubmit={handleFormSubmit}
           categories={categories}
           initialData={editingContact}
+          onCategoryAdded={handleCategoryAdded}
         />
 
         <ConfirmationModal

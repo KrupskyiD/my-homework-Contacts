@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Form, Button } from 'react-bootstrap';
 import categoryService from '../services/categoryService';
 
-function ContactForm({ show, onHide, onSubmit, categories: initialCategories, initialData }) {
+function ContactForm({ show, onHide, onSubmit, categories: initialCategories, initialData, onCategoryAdded }) {
   const [formData, setFormData] = useState({
     name: '',
     surname: '',
@@ -86,17 +86,25 @@ function ContactForm({ show, onHide, onSubmit, categories: initialCategories, in
       if (!localPart || !domainPart) {
         newErrors.email = 'Email must be a valid string in the format name@example.com.';
       } else {
-        // Check both parts for ASCII-only characters
-        const asciiOnlyRegex = /^[\x00-\x7F]+$/;
-        if (!asciiOnlyRegex.test(localPart) || !asciiOnlyRegex.test(domainPart)) {
-          newErrors.email = 'Email must contain only English alphabet letters before and after "@"';
-        } else {
+        // Check localPart: allow only English letters, numbers and certain characters (._% -)
+        const localPartRegex = /^[a-zA-Z0-9._%+-]+$/;
+        if (!localPartRegex.test(localPart)) {
+        newErrors.email = 'Email must contain only English letters, numbers, and allowed symbols (._%+-) before "@"';
+        }
+      // DomainPart check: allow only English letters, numbers, dots and hyphens
+      const domainPartRegex = /^[a-zA-Z0-9.-]+$/;
+        if (!domainPartRegex.test(domainPart)) {
+        newErrors.email = 'Email must contain only English letters, numbers, dots, and hyphens after "@"';
+        }
+      // Additional check: the domain should not start with "xn--" to avoid Punycode
+        if (domainPart.startsWith('xn--')) {
+        newErrors.email = 'Email domain contains non-English characters, which is not allowed';
+        }
           // Then validate the email format
           const emailRegex = /^[a-zA-Z][a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
           if (!emailRegex.test(formData.email)) {
             newErrors.email = 'Email must be a valid string in the format name@example.com.';
           }
-        }
       }
     }
     
@@ -141,6 +149,10 @@ function ContactForm({ show, onHide, onSubmit, categories: initialCategories, in
       const newCategory = await categoryService.createCategory({ name: newCategoryName });
       // Update local categories state with the new category
       setCategories(prevCategories => [...prevCategories, newCategory]);
+     
+      if (onCategoryAdded) {
+      onCategoryAdded(newCategory);
+    }
       // Set the new category as selected
       setFormData(prev => ({ ...prev, categoryId: newCategory.id }));
       setShowCategoryModal(false);
